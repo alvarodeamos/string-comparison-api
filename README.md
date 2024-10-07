@@ -30,7 +30,6 @@ You can use the following Python script to test the `/similarity` endpoint of th
 
 ```python
 import requests
-from pprint import pprint
 
 def test_name_similarity(name: str, threshold: int, base_url: str = "http://localhost:8000"):
     url = f"{base_url}/similarity?input_name={name}&threshold={threshold}"
