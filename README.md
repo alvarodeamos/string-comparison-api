@@ -1,4 +1,30 @@
-## Test Name Similarity Function
+## Running the Application
+
+Follow these steps to set up and run the string comparison API:
+
+1. **Clone the repository** into your target folder:
+    ```bash
+    git clone https://github.com/alvarodeamos/string-comparison-api.git
+    ```
+
+2. **Move the `names_dataset.csv` file** to the **`string-comparison-api`** folder (root of the app). This file will be automatically loaded into the database when the app is started.
+
+3. **Navigate to the main app folder**:
+    ```bash
+    cd string-comparison-api
+    ```
+
+4. **Ensure Docker is running** on your machine. Then, build and run the Docker containers to set up the database and the application:
+    ```bash
+    docker-compose build
+    docker-compose up
+    ```
+
+This will start the application and set up the database.
+
+
+
+## Test name similarity endpoint
 
 You can use the following Python script to test the `/similarity` endpoint of the API. This script sends a GET request to the API, checks for a successful response, and then prints the names along with their similarity scores.
 
