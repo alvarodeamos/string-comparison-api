@@ -20,7 +20,7 @@ class NamesRepository:
         results = {}
         input_name_lower = input_name.lower()
         for name in names:
-            full_name_lower = name['full_name'].lower()
+            full_name_lower = name['full_name_cleaned'].lower()
             similarity = fuzz.ratio(input_name_lower, full_name_lower)
             if similarity >= threshold:
                 logging.info(f"{input_name_lower} vs {full_name_lower} - match found, similarity is {similarity}")

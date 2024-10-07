@@ -24,7 +24,8 @@ class PostgresRepository:
         )
         return conn
 
-    def insert_names(self):
+    def create_names_table(self):
+        logging.info("start creating names table")
         conn = self.get_connection()
         cur = conn.cursor()
         try:
@@ -32,26 +33,20 @@ class PostgresRepository:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS names_data (
                     id SERIAL PRIMARY KEY,
-                    full_name VARCHAR NOT NULL
+                    logical_id INTEGER,
+                    full_name VARCHAR,
+                    full_name_cleaned VARCHAR
                 );
             """)
-            # clear existing data
-            cur.execute("DELETE FROM names_data;")
-            # load data from CSV
-            with open('names_dataset.csv', newline='', encoding='utf-8') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    full_name = row['full_name']
-                    cur.execute("INSERT INTO names_data (full_name) VALUES (%s);", (full_name,))
             conn.commit()
         except Exception as e:
             conn.rollback()
-            logging.error(f"error while inserting names: {e}")
+            logging.error(f"error while creating logs table: {e}")
         finally:
             cur.close()
             conn.close()
 
-    def create_logs(self):
+    def create_logs_table(self):
         logging.info("start creating logs table")
         conn = self.get_connection()
         cur = conn.cursor()
@@ -73,15 +68,38 @@ class PostgresRepository:
             cur.close()
             conn.close()
 
-    def get_names(self):
+    def insert_names(self):
         conn = self.get_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor()
         try:
-            cur.execute("SELECT id, full_name FROM names_data;")
-            results = cur.fetchall()
-            return results
+            # clean data from names
+            cur.execute("DELETE FROM names_data;")
+            conn.commit()
+            # load data from CSV
+            with open('names_dataset.csv', newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    logical_id = row['ID']
+                    full_name = row['Full Name']
+                    cur.execute("""
+                    INSERT INTO names_data (logical_id, full_name, full_name_cleaned)
+                    VALUES (%s, %s,
+                        REGEXP_REPLACE(
+                            REGEXP_REPLACE(
+                                REGEXP_REPLACE(
+                                    %s, 
+                                    '^\w+\.\s*', '', 'g'
+                                ),
+                                '[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]', '', 'g'
+                            ),
+                            '\s{2,}', ' ', 'g'
+                        )
+                    );
+                    """, (logical_id, full_name, full_name))
+            conn.commit()
         except Exception as e:
-            logging.error(f"error while retrieving names: {e}")
+            conn.rollback()
+            logging.error(f"error while inserting names: {e}")
         finally:
             cur.close()
             conn.close()
@@ -99,3 +117,15 @@ class PostgresRepository:
             cur.close()
             conn.close()
 
+    def get_names(self):
+        conn = self.get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cur.execute("SELECT id, full_name, full_name_cleaned FROM names_data;")
+            results = cur.fetchall()
+            return results
+        except Exception as e:
+            logging.error(f"error while retrieving names: {e}")
+        finally:
+            cur.close()
+            conn.close()

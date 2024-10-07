@@ -13,12 +13,9 @@ app = FastAPI()
 def startup_event():
     logging.info("startup event triggered")
     postgres_repository = PostgresRepository()
-    logging.info("inserting names...")
+    postgres_repository.create_names_table()
     postgres_repository.insert_names()
-    logging.info("names inserted")
-    logging.info("creating logs table...")
-    postgres_repository.create_logs()
-    logging.info("logs table created")
+    postgres_repository.create_logs_table()
 
 
 @app.get("/similarity")
